@@ -1,0 +1,58 @@
+version: '3'
+
+x-superset-depends-on: &superset-depends-on
+  - db
+  - redis
+  
+services:
+
+  redis:
+    image: redis:latest
+    container_name: superset_cache
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+
+  db:
+    image: postgres:10
+    environment:
+      - POSTGRES_DB=superset
+      - POSTGRES_USER=superset
+      - POSTGRES_PASSWORD=change_this
+    container_name: superset_db
+    restart: unless-stopped
+    volumes:
+      - db_home:/var/lib/postgresql/data
+
+  superset:
+    build: 
+      dockerfile: ./superset/Dockerfile
+      args:
+      - SUPERSET_USERNAME=${SUPERSET_USERNAME}
+      - SUPERSET_PASSWORD=${SUPERSET_PASSWORD}
+      - SUPERSET_EMAIL=${SUPERSET_EMAIL}
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY}
+      - SUPERSET_FIRSTNAME=${SUPERSET_FIRSTNAME}
+      - SUPERSET_LASTNAME=${SUPERSET_LASTNAME}
+
+    ports: 
+      - 8088:8088
+
+    environment:
+      - SUPERSET_USERNAME=${SUPERSET_USERNAME}
+      - SUPERSET_PASSWORD=${SUPERSET_PASSWORD}
+      - SUPERSET_EMAIL=${SUPERSET_EMAIL}
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY}
+      - SUPERSET_FIRSTNAME=${SUPERSET_FIRSTNAME}
+      - SUPERSET_LASTNAME=${SUPERSET_LASTNAME}
+
+    volumes:
+      - superset_home:/app/superset_home
+
+volumes:
+  superset_home:
+    external: false
+  db_home:
+    external: false
+  redis:
+    external: false
