@@ -3,7 +3,7 @@ version: '3'
 x-superset-depends-on: &superset-depends-on
   - db
   - redis
-  
+
 services:
 
   redis:
@@ -16,9 +16,13 @@ services:
   db:
     image: postgres:10
     environment:
-      - POSTGRES_DB=superset
-      - POSTGRES_USER=superset
-      - POSTGRES_PASSWORD=change_this
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+    ports:
+      - 5432:5432
+
     container_name: superset_db
     restart: unless-stopped
     volumes:
@@ -49,10 +53,26 @@ services:
     volumes:
       - superset_home:/app/superset_home
 
+  tunnel:
+    container_name: cloudflared-tunnel
+    image: cloudflare/cloudflared
+    restart: unless-stopped
+    depends_on:
+      - superset
+
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    
+    volumes:
+      - tunnel:/etc/cloudflared
+
 volumes:
   superset_home:
     external: false
   db_home:
     external: false
   redis:
+    external: false
+  tunnel:
     external: false
