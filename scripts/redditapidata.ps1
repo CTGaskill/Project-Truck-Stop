@@ -3,11 +3,11 @@ Function Convert-FromUnixDate ($UnixDate) {
  }
 
 
-# Reddit credentials (replace with your own values)
+# Reddit credentials
 $clientId = $env:REDDIT_USER
 $clientSecret = $env:REDDIT_PASSWORD
 $userAgent = "Web Scraper bot by /u/Available-Pickle-299"
-$redditUser = "Strong_Voice8670"  # The Reddit username whose comments you want to retrieve
+$redditUser = "Strong_Voice8670" 
 $commentlimit = 1000
 
 # Get the Reddit API access token
@@ -78,13 +78,27 @@ $comments = ForEach ($url in $string) {
     Invoke-RestMethod -Uri $url -Method Get -Headers $headers -Body $null
 }
 
+new-item data.csv
+
 # Output the first $limit comments
 $comments.data.children | Select-Object -First $commentlimit | ForEach-Object {
     $comment = $_.data
     $nicetime = Convert-FromUnixDate $comment.created
-    Write-Host "Comment ID: $($comment.id)"
+
+    Write-Host "Comment ID: $($comment.id)" 
     Write-Host "Subreddit: $($comment.subreddit)"
     Write-Host "Comment: $($comment.body)"
     Write-Host "Created: $nicetime"
     Write-Host "----------------------------------------"
+
+    $csvdata =[pscustomobject]@{
+        'datetime' = $nicetime
+        'Subreddit' = $comment.subreddit
+        'Comment' = $comment.body -replace('[^\u0000-\u007F]', '')
+        'IsNSFW?' = $comment.over_18
+        'CommentID' = $comment.id
+    }
+
+    $csvdata | Export-CSV .\data.csv -Append -NoTypeInformation -Force -Encoding UTF8
+
 }
