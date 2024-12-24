@@ -29,6 +29,7 @@ services:
       - db_home:/var/lib/postgresql/data
 
   superset:
+    container_name: superset_web
     build: 
       dockerfile: ./superset/Dockerfile
       args:
@@ -60,12 +61,24 @@ services:
     depends_on:
       - superset
 
-    command: tunnel run
+    command: tunnel --no-autoupdate run
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     
     volumes:
       - tunnel:/etc/cloudflared
+
+  monitor:
+    container_name: superset_status
+    image: louislam/uptime-kuma
+
+    restart: always
+
+    volumes:
+      - uptime_kuma:/app/data
+
+    ports:
+      - 3001:3001
 
 volumes:
   superset_home:
@@ -75,4 +88,6 @@ volumes:
   redis:
     external: false
   tunnel:
+    external: false
+  uptime_kuma:
     external: false

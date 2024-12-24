@@ -1,3 +1,4 @@
 
 scripts/modules_ps/envs.ps1
 docker/.env
+scripts/data.csv
